@@ -1,0 +1,133 @@
+{
+  "experiences": [
+    {
+      "id": "reinvest_wealth",
+      "company": "ReInvest Wealth",
+      "location": "Remote",
+      "title": "Full Stack Developer Intern",
+      "url": "https://reinvestwealth.com",
+      "start_date": "May 2025",
+      "end_date": "Dec 2025",
+      "tags": ["frontend", "fullstack", "backend", "react", "nodejs", "ai", "fintech", "startup"],
+      "priority": 1,
+      "always_include": true,
+      "bullets": [
+        {
+          "id": "reinvest_perf",
+          "text": "Improved application performance by \\textbf{40\\% reduced load times} across \\textbf{2,500+ users} by owning end-to-end \\textbf{React.js} frontend upgrade project.",
+          "tags": ["frontend", "performance", "react"]
+        },
+        {
+          "id": "reinvest_multicompany",
+          "text": "Increased team-based platform \\textbf{usage by 25\\%} by leading cross-functional development of multi-company access feature using React.js and Node.js for shared accounting workflows.",
+          "tags": ["fullstack", "react", "nodejs", "leadership"]
+        },
+        {
+          "id": "reinvest_ai",
+          "text": "Enhanced \\textbf{data accuracy by 35\\%} and reduced manual entry time by collaborating with engineers to implement AI receipt processing using OpenAI computer vision for automatic transaction matching.",
+          "tags": ["ai", "backend", "opencv", "automation"]
+        }
+      ]
+    },
+    {
+      "id": "fincnx",
+      "company": "Fincnx",
+      "location": "Remote",
+      "title": "Lead Full Stack Developer",
+      "url": "https://fincnx.com",
+      "start_date": "Sep 2023",
+      "end_date": "Jul 2024",
+      "tags": ["fullstack", "fintech", "django", "react", "leadership", "trading"],
+      "priority": 2,
+      "always_include": true,
+      "bullets": [
+        {
+          "id": "fincnx_platform",
+          "text": "Achieved \\textbf{1,500+ active users} with \\textbf{98\\% uptime} by taking end-to-end ownership of finance platform development using Django and React.js with rigorous operations.",
+          "tags": ["fullstack", "django", "react", "reliability"]
+        },
+        {
+          "id": "fincnx_trading",
+          "text": "Demonstrated algorithmic trading capabilities to major financial institutions by designing and delivering functional prototypes for Bank of Montreal, National Bank, and Investment Planning Council Canada.",
+          "tags": ["fintech", "trading", "prototyping", "enterprise"]
+        },
+        {
+          "id": "fincnx_realtime",
+          "text": "Enabled reliable live updates for \\textbf{500+ concurrent users} with \\textbf{sub-100ms latency} by building and operating real-time portfolio tracking system using WebSocket connections and Redis caching.",
+          "tags": ["backend", "websocket", "redis", "realtime", "performance"]
+        }
+      ]
+    },
+    {
+      "id": "tradeful",
+      "company": "Tradeful",
+      "location": "Ottawa, ON, Canada",
+      "title": "Part time Junior Fullstack Developer",
+      "url": "https://www.tradeful.net/",
+      "start_date": "Sept 2025",
+      "end_date": "Present",
+      "tags": ["fullstack", "react", "nodejs", "fintech", "trading"],
+      "priority": 3,
+      "always_include": true,
+      "bullets": [
+        {
+          "id": "tradeful_backtest",
+          "text": "Enabled strategy simulation across \\textbf{5+ years} of historical data with \\textbf{sub-500ms} response times by owning development of backtesting engine using React.js and Node.js.",
+          "tags": ["fullstack", "react", "nodejs", "performance", "trading"]
+        },
+        {
+          "id": "tradeful_retention",
+          "text": "Contributed to \\textbf{9\\%} increase in platform retention rates by collaborating through code reviews to safely deploy trading strategy validation features helping users identify profitable algorithms.",
+          "tags": ["fullstack", "code-review", "trading"]
+        }
+      ]
+    },
+    {
+      "id": "webflux",
+      "company": "WebFlux",
+      "location": "Ottawa, ON / Remote",
+      "title": "Founder \\& Frontend Developer",
+      "start_date": "Apr 2023",
+      "end_date": "Present",
+      "tags": ["frontend", "fullstack", "nextjs", "react", "wordpress", "freelance", "entrepreneurship"],
+      "priority": 4,
+      "always_include": false,
+      "bullets": [
+        {
+          "id": "webflux_ooo",
+          "text": "Built high-converting homepage component using React.js and WordPress for \\textbf{One of One Funding}, increasing user interaction by \\textbf{17\\%} for company generating \\textbf{\\$1M+ monthly revenue}.",
+          "tags": ["frontend", "react", "wordpress", "conversion"]
+        },
+        {
+          "id": "webflux_clients",
+          "text": "Delivered custom web applications to \\textbf{25+ small businesses} using Next.js and modern JavaScript frameworks.",
+          "tags": ["frontend", "nextjs", "freelance"]
+        }
+      ]
+    },
+    {
+      "id": "parks_canada",
+      "company": "Parks Canada",
+      "location": "Gatineau, QC, Canada",
+      "title": "IT Service Desk / IT Automation",
+      "url": "https://parks.canada.ca/",
+      "start_date": "July 2023",
+      "end_date": "Sep 2024",
+      "tags": ["backend", "python", "automation", "devops", "government", "etl"],
+      "priority": 4,
+      "always_include": false,
+      "bullets": [
+        {
+          "id": "parks_pipeline",
+          "text": "Improved data pipeline processing Lansweeper asset management API for \\textbf{1,200+ devices}, implementing automated synchronization and ETL processes saving \\textbf{20+ hours} per deployment cycle.",
+          "tags": ["backend", "python", "etl", "api", "automation"]
+        },
+        {
+          "id": "parks_scripts",
+          "text": "Developed Python scripts for system imaging automation and software deployment across \\textbf{50+ workstations}, reducing manual configuration time from days to hours.",
+          "tags": ["backend", "python", "automation", "devops"]
+        }
+      ]
+    }
+  ]
+}

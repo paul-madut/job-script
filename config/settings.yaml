@@ -1,0 +1,76 @@
+# Job Cannon Configuration
+# ========================
+
+# Your personal info (used for header - edit in template directly for now)
+name: "Paul Madut"
+
+# Claude API settings
+api:
+  provider: "anthropic"  # "anthropic" or "openai"
+  model: "claude-sonnet-4-20250514"  # cheaper model for bulk operations
+  max_tokens: 1024
+
+# Job search parameters
+search:
+  keywords:
+    - "software engineer"
+    - "full stack developer"
+    - "frontend developer"
+    - "backend developer"
+    - "software developer"
+    - "junior developer"
+    - "new grad software"
+
+  locations:
+    - "Ottawa, ON"
+    - "Toronto, ON"
+    - "Remote"
+    - "Canada"
+
+  # Filters
+  salary_min: 65000
+  experience_level: "entry_level"  # entry_level, mid_level, senior
+  job_type: "fulltime"  # fulltime, parttime, contract, internship
+  posted_within_days: 7  # only jobs posted in last N days
+
+  # Boards to scrape (enable/disable)
+  boards:
+    indeed: true
+    linkedin_public: true  # public listings only, no login required
+    # Future: greenhouse, lever, wellfound
+
+# Resume assembly settings
+resume:
+  max_experiences: 4       # how many work experiences to include
+  max_projects: 3          # how many projects to include
+  max_bullets_per_exp: 3   # max bullet points per experience
+
+  # Content selection strategy
+  # "ai" = Claude picks best items per job description
+  # "rule_based" = tag matching without API calls (cheaper)
+  selection_strategy: "ai"
+
+# Output settings
+output:
+  resumes_dir: "./output/resumes"
+  tracker_file: "./output/job_tracker.csv"
+  logs_dir: "./output/logs"
+
+  # CSV columns
+  tracker_columns:
+    - "date_found"
+    - "company"
+    - "title"
+    - "location"
+    - "salary_range"
+    - "url"
+    - "job_description_preview"
+    - "resume_variant"
+    - "resume_file"
+    - "status"  # new, applied, rejected, interview, offer
+
+# Rate limiting (be respectful to job boards)
+scraping:
+  delay_between_requests_sec: 2
+  max_jobs_per_board: 50
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"

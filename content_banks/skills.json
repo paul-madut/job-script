@@ -1,0 +1,40 @@
+{
+  "skill_categories": [
+    {
+      "id": "languages",
+      "label": "Programming Languages",
+      "items": ["JavaScript (ES6+)", "TypeScript", "Python", "Java", "C/C++", "HTML5", "CSS3", "SQL"],
+      "always_include": true
+    },
+    {
+      "id": "frontend",
+      "label": "Frontend Technologies",
+      "items": ["React.js", "Next.js", "Redux", "Tailwind CSS", "Material-UI", "Framer", "GSAP"],
+      "always_include": true
+    },
+    {
+      "id": "backend",
+      "label": "Backend Technologies",
+      "items": ["Node.js", "Express.js", "Django", "RESTful APIs", "WebSocket", "GraphQL"],
+      "always_include": true
+    },
+    {
+      "id": "databases_cloud",
+      "label": "Databases \\& Cloud",
+      "items": ["MongoDB", "PostgreSQL", "Firebase", "MySQL", "Azure", "Google Cloud Platform"],
+      "always_include": true
+    },
+    {
+      "id": "tools",
+      "label": "Development Tools",
+      "items": ["Git", "GitHub", "Docker", "Linux", "CI/CD", "Webpack", "VS Code", "Vim"],
+      "certifications": [
+        {
+          "name": "Microsoft Azure Fundamentals",
+          "url": "https://www.credly.com/badges/11c3ab5c-c5a4-41ec-8022-30632ba55f15/linked_in_profile"
+        }
+      ],
+      "always_include": true
+    }
+  ]
+}

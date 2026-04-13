@@ -1,0 +1,46 @@
+{
+  "projects": [
+    {
+      "id": "algo_trading_saas",
+      "name": "Algorithmic Trading SaaS Platform",
+      "tags": ["fullstack", "backend", "fintech", "trading", "django", "react", "ai", "websocket", "mongodb"],
+      "description": "Engineered full-stack algorithmic trading platform enabling white-label bot deployment with React.js frontend and Django backend. Integrated OpenAI API for intelligent trading signal generation and real-time market data processing. Technologies: React.js, Django, OpenAI API, WebSocket, MongoDB."
+    },
+    {
+      "id": "neobank_fullstack",
+      "name": "NeoBank Digital Banking Platform",
+      "tags": ["fullstack", "fintech", "react", "nodejs", "stripe", "plaid", "supabase"],
+      "description": "Built comprehensive banking solution with Stripe Issuing/Identity, Plaid API, and Supabase. Implemented KYC/AML compliance, card management, and real-time transaction processing. Technologies: React.js, Node.js, PostgreSQL, Stripe APIs, Supabase Auth."
+    },
+    {
+      "id": "neobank_backend",
+      "name": "NeoBank Core Banking Backend",
+      "tags": ["backend", "fintech", "nodejs", "postgresql", "stripe", "microservices", "docker", "redis"],
+      "description": "Built microservices architecture with Node.js and PostgreSQL for KYC/AML compliance using Stripe Identity. Implemented transaction processing engine with ACID compliance and Plaid API integration for account aggregation. Technologies: Node.js, PostgreSQL, Stripe APIs, Supabase, Redis, Docker."
+    },
+    {
+      "id": "cro_dashboard",
+      "name": "AI-Powered CRO Audit Dashboard",
+      "tags": ["frontend", "ai", "react", "data-visualization", "ux"],
+      "description": "Created website analysis tool with interactive heatmaps, user flow visualization, and performance metrics. Implemented responsive design scoring with actionable UI/UX recommendations."
+    },
+    {
+      "id": "b2lead",
+      "name": "B2Lead - Lead Generation Platform",
+      "tags": ["frontend", "fullstack", "nextjs", "mongodb", "scraping", "saas"],
+      "description": "Built automated lead generation SaaS using Next.js and MongoDB, reducing lead acquisition costs by \\textbf{\\$1,000+ monthly}. Developed web scraping algorithms and API integrations for high-conversion business lead compilation. Technologies: Next.js, MongoDB, Node.js, Express.js."
+    },
+    {
+      "id": "gethub",
+      "name": "Gethub - Git Version Control System",
+      "tags": ["backend", "cpp", "systems", "algorithms", "low-level"],
+      "description": "Recreated core GitHub features from scratch using C++ including repository management, commit tracking, branching/merging, and diff algorithms."
+    },
+    {
+      "id": "content_creator",
+      "name": "Content Creator Platform",
+      "tags": ["frontend", "fullstack", "content", "social-media"],
+      "description": "Created educational content on software engineering topics across YouTube, Instagram, and TikTok, achieving \\textbf{500,000+ total views}. Produced technical tutorials covering React.js and full-stack development concepts."
+    }
+  ]
+}
