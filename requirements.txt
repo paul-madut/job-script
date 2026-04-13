@@ -5,3 +5,4 @@ beautifulsoup4>=4.12.0  # HTML parsing for job boards
 pyyaml>=6.0             # Config file parsing
 lxml>=5.0.0             # Faster HTML parser for BeautifulSoup
 python-dotenv>=1.0.0    # Load API keys from .env file
+pytest>=8.0.0           # Test framework
