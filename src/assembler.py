@@ -11,8 +11,13 @@ import json
 import os
 import subprocess
 import shutil
+import time
 from pathlib import Path
-from anthropic import Anthropic
+from anthropic import Anthropic, APIError, APIConnectionError, RateLimitError
+
+from src.logger import get_logger
+
+log = get_logger("assembler")
 
 # Paths
 BASE_DIR = Path(__file__).parent.parent
@@ -95,11 +100,28 @@ Respond with ONLY valid JSON in this exact format:
   "reasoning": "Brief explanation of choices"
 }}"""
 
-    response = client.messages.create(
-        model=config.get("model", "claude-sonnet-4-20250514"),
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    # Retry with exponential backoff for transient API failures
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(
+                model=config.get("model", "claude-sonnet-4-20250514"),
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            break
+        except RateLimitError as e:
+            wait = 2 ** (attempt + 2)  # 4s, 8s, 16s
+            log.warning(f"API rate limited (attempt {attempt+1}/{max_retries}), waiting {wait}s...")
+            time.sleep(wait)
+            if attempt == max_retries - 1:
+                raise
+        except (APIConnectionError, APIError) as e:
+            wait = 2 ** (attempt + 1)  # 2s, 4s, 8s
+            log.warning(f"API error (attempt {attempt+1}/{max_retries}): {e}, retrying in {wait}s...")
+            time.sleep(wait)
+            if attempt == max_retries - 1:
+                raise
 
     # Parse the JSON response
     response_text = response.content[0].text
@@ -294,8 +316,8 @@ def assemble_resume(job_description: str, job_title: str, company: str, config: 
 
     pdf_path = compile_pdf(latex, output_name)
 
-    print(f"  -> Resume generated: {pdf_path}")
-    print(f"  -> Strategy: {strategy} | Role type: {selection.get('role_type', 'unknown')}")
-    print(f"  -> Reasoning: {selection.get('reasoning', 'N/A')}")
+    log.info(f"  -> Resume generated: {pdf_path}")
+    log.info(f"  -> Strategy: {strategy} | Role type: {selection.get('role_type', 'unknown')}")
+    log.debug(f"  -> Reasoning: {selection.get('reasoning', 'N/A')}")
 
     return pdf_path, selection

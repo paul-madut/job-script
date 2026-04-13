@@ -23,15 +23,23 @@ Usage:
 """
 
 import argparse
+import subprocess
 import sys
 import yaml
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent.parent
 
-from src.scraper import IndeedScraper, LinkedInPublicScraper, save_to_csv, JobPosting
+# Load .env before anything uses API keys
+load_dotenv(BASE_DIR / ".env")
+
+from src.scraper import IndeedScraper, LinkedInPublicScraper, save_to_csv, filter_jobs, JobPosting
 from src.assembler import assemble_resume, load_banks
+from src.logger import get_logger
+
+log = get_logger("orchestrator")
 
 
 def load_config() -> dict:
@@ -51,32 +59,36 @@ def cmd_scrape(config: dict, dry_run: bool = False):
     all_jobs = []
 
     boards = search_config.get("boards", {})
-    keywords = search_config["keywords"]
+    queries = search_config.get("search_queries", search_config.get("keywords", []))
     locations = search_config["locations"]
+    include_kw = search_config.get("include_keywords", [])
+    exclude_kw = search_config.get("exclude_keywords", [])
     max_per_board = scraping_config.get("max_jobs_per_board", 50)
 
     if dry_run:
-        print("\n[DRY RUN] Would scrape:")
-        for kw in keywords:
+        log.info("\n[DRY RUN] Would scrape:")
+        for q in queries:
             for loc in locations:
-                print(f"  - '{kw}' in '{loc}'")
-        print(f"  Boards: {[k for k, v in boards.items() if v]}")
+                log.info(f"  - '{q}' in '{loc}'")
+        log.info(f"  Boards: {[k for k, v in boards.items() if v]}")
+        log.info(f"  Include filter: {include_kw}")
+        log.info(f"  Exclude filter: {exclude_kw}")
         return []
 
     # Indeed
     if boards.get("indeed"):
         scraper = IndeedScraper({**scraping_config, **search_config})
-        for keyword in keywords:
+        for query in queries:
             for location in locations:
-                jobs = scraper.search(keyword, location, max_results=max_per_board)
+                jobs = scraper.search(query, location, max_results=max_per_board)
                 all_jobs.extend(jobs)
 
     # LinkedIn (public)
     if boards.get("linkedin_public"):
         scraper = LinkedInPublicScraper({**scraping_config, **search_config})
-        for keyword in keywords:
+        for query in queries:
             for location in locations:
-                jobs = scraper.search(keyword, location, max_results=25)
+                jobs = scraper.search(query, location, max_results=25)
                 all_jobs.extend(jobs)
 
     # Deduplicate by URL
@@ -87,7 +99,12 @@ def cmd_scrape(config: dict, dry_run: bool = False):
             seen_urls.add(job.url)
             unique_jobs.append(job)
 
-    print(f"\nTotal unique jobs found: {len(unique_jobs)}")
+    log.info(f"\nTotal unique jobs scraped: {len(unique_jobs)}")
+
+    # Filter by include/exclude keywords
+    if include_kw or exclude_kw:
+        unique_jobs = filter_jobs(unique_jobs, include_kw, exclude_kw)
+        log.info(f"Jobs after filtering: {len(unique_jobs)}")
 
     # Save to tracker
     new_jobs = save_to_csv(unique_jobs, tracker_path)
@@ -108,7 +125,7 @@ def cmd_generate(config: dict, jobs: list = None, dry_run: bool = False):
     if jobs is None:
         # Load 'new' jobs from CSV
         if not tracker_path.exists():
-            print("No tracker file found. Run 'scrape' first.")
+            log.info("No tracker file found. Run 'scrape' first.")
             return
 
         jobs = []
@@ -132,33 +149,37 @@ def cmd_generate(config: dict, jobs: list = None, dry_run: bool = False):
                     ))
 
     if not jobs:
-        print("No new jobs to generate resumes for.")
+        log.info("No new jobs to generate resumes for.")
         return
 
     if dry_run:
-        print(f"\n[DRY RUN] Would generate {len(jobs)} resumes:")
+        log.info(f"\n[DRY RUN] Would generate {len(jobs)} resumes:")
         for j in jobs[:10]:
-            print(f"  - {j.title} @ {j.company}")
+            log.info(f"  - {j.title} @ {j.company}")
         if len(jobs) > 10:
-            print(f"  ... and {len(jobs) - 10} more")
+            log.info(f"  ... and {len(jobs) - 10} more")
         return
 
-    print(f"\nGenerating resumes for {len(jobs)} jobs...")
+    log.info(f"\nGenerating resumes for {len(jobs)} jobs...")
 
     # For AI selection, we need full job descriptions
     # Fetch them if we only have previews
     scraper_config = config.get("scraping", {})
     if resume_config.get("selection_strategy") == "ai":
         indeed_scraper = IndeedScraper(scraper_config)
+        linkedin_scraper = LinkedInPublicScraper(scraper_config)
         for job in jobs:
             if not job.job_description_full and job.url:
-                print(f"  Fetching full description: {job.company} - {job.title}")
-                job.job_description_full = indeed_scraper.fetch_full_description(job)
+                log.info(f"  Fetching full description: {job.company} - {job.title}")
+                if job.source == "linkedin":
+                    job.job_description_full = linkedin_scraper.fetch_full_description(job)
+                else:
+                    job.job_description_full = indeed_scraper.fetch_full_description(job)
 
     # Generate resumes
     results = []
     for i, job in enumerate(jobs):
-        print(f"\n[{i+1}/{len(jobs)}] {job.company} - {job.title}")
+        log.info(f"\n[{i+1}/{len(jobs)}] {job.company} - {job.title}")
         try:
             desc = job.job_description_full or job.job_description_preview
             pdf_path, selection = assemble_resume(
@@ -171,32 +192,32 @@ def cmd_generate(config: dict, jobs: list = None, dry_run: bool = False):
             job.resume_variant = selection.get("role_type", "unknown")
             results.append((job, pdf_path))
         except Exception as e:
-            print(f"  [ERROR] Failed to generate resume: {e}")
+            log.error(f"  Failed to generate resume: {e}")
             results.append((job, None))
 
     # Update tracker CSV with resume paths
     _update_tracker(tracker_path, results)
 
     successful = sum(1 for _, p in results if p)
-    print(f"\nDone! Generated {successful}/{len(jobs)} resumes.")
-    print(f"Resumes saved to: {BASE_DIR / config['output']['resumes_dir']}")
-    print(f"Tracker updated: {tracker_path}")
+    log.info(f"\nDone! Generated {successful}/{len(jobs)} resumes.")
+    log.info(f"Resumes saved to: {BASE_DIR / config['output']['resumes_dir']}")
+    log.info(f"Tracker updated: {tracker_path}")
 
 
 def cmd_single(config: dict, title: str, company: str, description: str):
     """Generate a single resume for a specific job."""
     resume_config = config["resume"]
 
-    print(f"Generating resume for: {title} @ {company}")
+    log.info(f"Generating resume for: {title} @ {company}")
     pdf_path, selection = assemble_resume(
         job_description=description,
         job_title=title,
         company=company,
         config={**resume_config, "model": config["api"]["model"]}
     )
-    print(f"\nResume saved to: {pdf_path}")
-    print(f"Role type: {selection.get('role_type')}")
-    print(f"Reasoning: {selection.get('reasoning')}")
+    log.info(f"\nResume saved to: {pdf_path}")
+    log.info(f"Role type: {selection.get('role_type')}")
+    log.info(f"Reasoning: {selection.get('reasoning')}")
 
 
 def _update_tracker(tracker_path: Path, results: list):
@@ -230,6 +251,33 @@ def _update_tracker(tracker_path: Path, results: list):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def _notify(title: str, message: str):
+    """Send a macOS notification. Fails silently on non-macOS systems."""
+    try:
+        subprocess.run(
+            ["osascript", "-e", f'display notification "{message}" with title "{title}"'],
+            capture_output=True,
+            timeout=5,
+        )
+    except Exception:
+        pass  # non-critical
+
+
+def _run_summary(jobs_found: int, resumes_generated: int, resumes_failed: int):
+    """Log and notify a summary of the run."""
+    summary = (
+        f"Jobs found: {jobs_found} | "
+        f"Resumes generated: {resumes_generated} | "
+        f"Failed: {resumes_failed}"
+    )
+    log.info(f"\n{'='*50}")
+    log.info(f"RUN SUMMARY - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    log.info(summary)
+    log.info(f"{'='*50}")
+
+    _notify("Job Cannon", summary)
 
 
 def main():
@@ -278,7 +326,22 @@ Examples:
 
     if args.command == "run":
         jobs = cmd_scrape(config, dry_run=args.dry_run)
-        cmd_generate(config, jobs=jobs if not args.dry_run else None, dry_run=args.dry_run)
+        if not args.dry_run:
+            cmd_generate(config, jobs=jobs)
+            # Count results from tracker
+            import csv
+            tracker_path = BASE_DIR / config["output"]["tracker_file"]
+            generated = failed = 0
+            if tracker_path.exists():
+                with open(tracker_path) as f:
+                    for row in csv.DictReader(f):
+                        if row.get("resume_file"):
+                            generated += 1
+                        elif row.get("status") == "new":
+                            failed += 1
+            _run_summary(len(jobs) if jobs else 0, generated, failed)
+        else:
+            cmd_generate(config, dry_run=True)
 
     elif args.command == "scrape":
         cmd_scrape(config, dry_run=args.dry_run)

@@ -20,6 +20,9 @@ from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 
+from src.logger import get_logger
+
+log = get_logger("scraper")
 BASE_DIR = Path(__file__).parent.parent
 
 
@@ -63,6 +66,26 @@ class IndeedScraper:
         })
         self.delay = config.get("delay_between_requests_sec", 2)
 
+    def _get_with_retry(self, url: str, params: dict = None, max_retries: int = 3) -> requests.Response:
+        """GET request with exponential backoff on transient failures."""
+        for attempt in range(max_retries):
+            try:
+                resp = self.session.get(url, params=params, timeout=15)
+                if resp.status_code == 429:
+                    wait = 2 ** (attempt + 2)
+                    log.warning(f"Rate limited (attempt {attempt+1}), waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                return resp
+            except requests.ConnectionError as e:
+                wait = 2 ** (attempt + 1)
+                log.warning(f"Connection error (attempt {attempt+1}): {e}, retrying in {wait}s...")
+                time.sleep(wait)
+                if attempt == max_retries - 1:
+                    raise
+        return resp  # return last response even if 429
+
     def search(self, keyword: str, location: str, max_results: int = 50) -> list[JobPosting]:
         """
         Search Indeed for jobs matching keyword + location.
@@ -72,7 +95,7 @@ class IndeedScraper:
         start = 0
         per_page = 10  # Indeed shows 10-15 results per page
 
-        print(f"  Searching Indeed: '{keyword}' in '{location}'...")
+        log.info(f"  Searching Indeed: '{keyword}' in '{location}'...")
 
         while len(jobs) < max_results:
             params = {
@@ -89,14 +112,9 @@ class IndeedScraper:
                 params["salary"] = f"${salary_min}"
 
             try:
-                resp = self.session.get(
-                    f"{self.BASE_URL}/jobs",
-                    params=params,
-                    timeout=15
-                )
-                resp.raise_for_status()
+                resp = self._get_with_retry(f"{self.BASE_URL}/jobs", params=params)
             except requests.RequestException as e:
-                print(f"  [WARN] Request failed for page {start}: {e}")
+                log.warning(f"Request failed for page {start}: {e}")
                 break
 
             soup = BeautifulSoup(resp.text, "html.parser")
@@ -110,7 +128,7 @@ class IndeedScraper:
             )
 
             if not job_cards:
-                print(f"  [INFO] No more results at offset {start}")
+                log.info(f"  No more results at offset {start}")
                 break
 
             for card in job_cards:
@@ -124,7 +142,7 @@ class IndeedScraper:
             delay = self.delay + random.uniform(0.5, 1.5)
             time.sleep(delay)
 
-        print(f"  Found {len(jobs)} jobs for '{keyword}' in '{location}'")
+        log.info(f"  Found {len(jobs)} jobs for '{keyword}' in '{location}'")
         return jobs[:max_results]
 
     def _parse_card(self, card) -> Optional[JobPosting]:
@@ -193,7 +211,7 @@ class IndeedScraper:
             )
 
         except Exception as e:
-            print(f"  [WARN] Failed to parse job card: {e}")
+            log.warning(f"Failed to parse job card: {e}")
             return None
 
     def fetch_full_description(self, job: JobPosting) -> str:
@@ -206,8 +224,7 @@ class IndeedScraper:
 
         try:
             time.sleep(self.delay + random.uniform(0.5, 1.0))
-            resp = self.session.get(job.url, timeout=15)
-            resp.raise_for_status()
+            resp = self._get_with_retry(job.url)
 
             soup = BeautifulSoup(resp.text, "html.parser")
             desc_el = (
@@ -220,7 +237,7 @@ class IndeedScraper:
                 return desc_el.get_text(separator="\n", strip=True)
 
         except Exception as e:
-            print(f"  [WARN] Failed to fetch description for {job.url}: {e}")
+            log.warning(f"Failed to fetch description for {job.url}: {e}")
 
         return job.job_description_preview  # fallback to snippet
 
@@ -251,7 +268,7 @@ class LinkedInPublicScraper:
         jobs = []
         start = 0
 
-        print(f"  Searching LinkedIn (public): '{keyword}' in '{location}'...")
+        log.info(f"  Searching LinkedIn (public): '{keyword}' in '{location}'...")
 
         while len(jobs) < max_results:
             params = {
@@ -266,12 +283,12 @@ class LinkedInPublicScraper:
                 resp = self.session.get(self.BASE_URL, params=params, timeout=15)
 
                 if resp.status_code == 429:
-                    print("  [WARN] LinkedIn rate limited. Stopping LinkedIn scrape.")
+                    log.warning("LinkedIn rate limited. Stopping LinkedIn scrape.")
                     break
 
                 resp.raise_for_status()
             except requests.RequestException as e:
-                print(f"  [WARN] LinkedIn request failed: {e}")
+                log.warning(f"LinkedIn request failed: {e}")
                 break
 
             soup = BeautifulSoup(resp.text, "html.parser")
@@ -288,8 +305,38 @@ class LinkedInPublicScraper:
             start += 25
             time.sleep(self.delay + random.uniform(1.0, 3.0))
 
-        print(f"  Found {len(jobs)} jobs from LinkedIn")
+        log.info(f"  Found {len(jobs)} jobs from LinkedIn")
         return jobs[:max_results]
+
+    def fetch_full_description(self, job: JobPosting) -> str:
+        """Fetch full job description from a LinkedIn job detail page."""
+        if not job.url:
+            return ""
+
+        try:
+            time.sleep(self.delay + random.uniform(1.0, 2.0))
+            resp = self.session.get(job.url, timeout=15)
+
+            if resp.status_code == 429:
+                log.warning("LinkedIn rate limited during description fetch.")
+                return job.job_description_preview
+
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+
+            desc_el = (
+                soup.select_one("div.show-more-less-html__markup") or
+                soup.select_one("div.description__text") or
+                soup.select_one("[class*='description']")
+            )
+
+            if desc_el:
+                return desc_el.get_text(separator="\n", strip=True)
+
+        except Exception as e:
+            log.warning(f"Failed to fetch LinkedIn description for {job.url}: {e}")
+
+        return job.job_description_preview
 
     def _parse_linkedin_card(self, card) -> Optional[JobPosting]:
         """Parse a LinkedIn public job card."""
@@ -318,6 +365,28 @@ class LinkedInPublicScraper:
             )
         except Exception:
             return None
+
+
+def filter_jobs(jobs: list[JobPosting], include_keywords: list[str], exclude_keywords: list[str]) -> list[JobPosting]:
+    """
+    Filter jobs locally. A job is kept if its title or preview matches at least
+    one include keyword AND its title matches none of the exclude keywords.
+    """
+    kept = []
+    for job in jobs:
+        searchable = (job.title + " " + job.job_description_preview).lower()
+        title_lower = job.title.lower()
+
+        has_include = any(kw.lower() in searchable for kw in include_keywords)
+        has_exclude = any(kw.lower() in title_lower for kw in exclude_keywords)
+
+        if has_include and not has_exclude:
+            kept.append(job)
+
+    filtered_out = len(jobs) - len(kept)
+    if filtered_out:
+        log.info(f"  Filtered out {filtered_out} irrelevant jobs, kept {len(kept)}")
+    return kept
 
 
 def save_to_csv(jobs: list[JobPosting], filepath: Path):
@@ -350,5 +419,5 @@ def save_to_csv(jobs: list[JobPosting], filepath: Path):
             row.pop("job_description_full", None)  # don't save full desc to CSV
             writer.writerow(row)
 
-    print(f"  Saved {len(new_jobs)} new jobs to {filepath} ({len(jobs) - len(new_jobs)} duplicates skipped)")
+    log.info(f"  Saved {len(new_jobs)} new jobs to {filepath} ({len(jobs) - len(new_jobs)} duplicates skipped)")
     return new_jobs

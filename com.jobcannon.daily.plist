@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+    Job Cannon - macOS launchd scheduler
+    Runs the pipeline daily at 9:00 AM.
+
+    Install:
+      cp com.jobcannon.daily.plist ~/Library/LaunchAgents/
+      launchctl load ~/Library/LaunchAgents/com.jobcannon.daily.plist
+
+    Uninstall:
+      launchctl unload ~/Library/LaunchAgents/com.jobcannon.daily.plist
+      rm ~/Library/LaunchAgents/com.jobcannon.daily.plist
+
+    Test (run immediately):
+      launchctl start com.jobcannon.daily
+    -->
+    <key>Label</key>
+    <string>com.jobcannon.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/paulmadut/Desktop/Projects/job-script/run.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/paulmadut/Desktop/Projects/job-script</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/paulmadut/Desktop/Projects/job-script/output/logs/launchd_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/paulmadut/Desktop/Projects/job-script/output/logs/launchd_stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/Library/TeX/texbin</string>
+    </dict>
+</dict>
+</plist>

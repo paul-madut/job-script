@@ -12,14 +12,61 @@ api:
 
 # Job search parameters
 search:
-  keywords:
-    - "software engineer"
-    - "full stack developer"
-    - "frontend developer"
-    - "backend developer"
-    - "software developer"
-    - "junior developer"
-    - "new grad software"
+  # Broad search terms — cast a wide net, filter locally
+  search_queries:
+    - "software"
+    - "developer"
+    - "IT"
+    - "engineer"
+
+  # Jobs are kept only if the title or description contains at least one of these.
+  # Matching is case-insensitive.
+  include_keywords:
+    - "software"
+    - "developer"
+    - "engineer"
+    - "full stack"
+    - "fullstack"
+    - "frontend"
+    - "front-end"
+    - "backend"
+    - "back-end"
+    - "web developer"
+    - "devops"
+    - "cloud"
+    - "data engineer"
+    - "QA"
+    - "SDET"
+    - "IT analyst"
+    - "systems analyst"
+    - "automation"
+    - "react"
+    - "python"
+    - "javascript"
+    - "node"
+    - "django"
+    - "fintech"
+    - "solutions engineer"
+    - "technical analyst"
+
+  # Jobs are thrown out if the title contains any of these (case-insensitive).
+  # Catches roles you're not targeting even if they matched a broad search.
+  exclude_keywords:
+    - "senior"
+    - "staff"
+    - "principal"
+    - "lead"
+    - "director"
+    - "manager"
+    - "architect"
+    - "10+ years"
+    - "8+ years"
+    - "7+ years"
+    - "mechanical"
+    - "electrical"
+    - "civil"
+    - "chemical"
+    - "hardware"
 
   locations:
     - "Ottawa, ON"

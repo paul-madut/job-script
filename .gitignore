@@ -1,0 +1,31 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Output
+output/resumes/*.pdf
+output/resumes/*.tex
+output/resumes/*.aux
+output/resumes/*.log
+output/resumes/*.out
+output/logs/*.log
+output/job_tracker.csv
+
+# LaTeX artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+
+# OS
+.DS_Store
+Thumbs.db
